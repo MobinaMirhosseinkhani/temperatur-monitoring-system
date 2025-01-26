@@ -1,0 +1,150 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+try10.bin -- emu8086 assembler version: 4.08  
+ 
+[ 1/18/2025  --  2:56:50 AM ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       
+[   2]        :                                       ; You may customize this and other start-up templates;
+[   3]        :                                       ; The location of this template is c:\emu8086\inc\0_com_template.txt
+[   4]        :                                       
+[   5]        :                                       org 100h
+[   6]        :                                       
+[   7]        :                                       my_data segment
+[   8]        :                                       CONTROL EQU 06H
+[   9]        :                                       PORTA   EQU 00H
+[  10]        :                                       PB      EQU 02H
+[  11]        :                                       PC      EQU 04H
+[  12]        :                                       my_data ends
+[  13]        :                                       
+[  14]        :                                       mycode segment
+[  15]        :                                       assume cs:mycode, ds:my_data
+[  16]    0100: B8 10 00                              mov ax,my_data
+[  17]    0103: 8E D8                                 mov ds,ax
+[  18]        :                                       
+[  19]    0105:                                       Start:
+[  20]        :                                       ; Seven segment codes for 0-9
+[  21]    0105: C6 06 00 10 C0                        mov [1000h], 0C0H    ; 0
+[  22]    010A: C6 06 01 10 F9                        mov [1001h], 0F9H    ; 1
+[  23]    010F: C6 06 02 10 A4                        mov [1002h], 0A4H    ; 2
+[  24]    0114: C6 06 03 10 B0                        mov [1003h], 0B0H    ; 3
+[  25]    0119: C6 06 04 10 99                        mov [1004h], 099H    ; 4
+[  26]    011E: C6 06 05 10 92                        mov [1005h], 092H    ; 5
+[  27]    0123: C6 06 06 10 82                        mov [1006h], 082H    ; 6
+[  28]    0128: C6 06 07 10 F8                        mov [1007h], 0F8H    ; 7
+[  29]    012D: C6 06 08 10 80                        mov [1008h], 080H    ; 8
+[  30]    0132: C6 06 09 10 90                        mov [1009h], 090H    ; 9
+[  31]        :                                       
+[  32]        :                                       ; Initialize 8255 for mode 0
+[  33]    0137: B0 82                                 mov al,10000010B     ; Set PORTA as output, PORTB as input
+[  34]    0139: BA 06 00                              mov dx,CONTROL
+[  35]    013C: EE                                    out dx,al
+[  36]        :                                       
+[  37]    013D:                                       again:
+[  38]        :                                       ; Read from ADC (PORTB)
+[  39]    013D: BA 02 00                              mov dx,PB
+[  40]    0140: EC                                    in al,dx             ; Read directly into AL
+[  41]    0141: A2 00 20                              mov [2000h],al       ; Store the raw value
+[  42]        :                                       
+[  43]        :                                       ; Check if number is odd or even
+[  44]    0144: A0 00 20                              mov al,[2000h]
+[  45]    0147: A8 01                                 test al,1            ; Test least significant bit
+[  46]    0149: 75 06                                 jnz odd_number       ; If LSB is 1, number is odd
+[  47]        :                                       
+[  48]        :                                       ; For even numbers, multiply by 2
+[  49]    014B: B3 02                                 mov bl,2
+[  50]    014D: F6 E3                                 mul bl               ; AX = AL * 2
+[  51]    014F: EB 06                                 jmp store_result
+[  52]        :                                       
+[  53]    0151:                                       odd_number:
+[  54]        :                                       ; For odd numbers, multiply by 2 and subtract 1
+[  55]    0151: B3 02                                 mov bl,2
+[  56]    0153: F6 E3                                 mul bl               ; AX = AL * 2
+[  57]    0155: FE C8                                 dec al               ; Subtract 1 from result
+[  58]        :                                       
+[  59]    0157:                                       store_result:
+[  60]    0157: A2 00 20                              mov [2000h],al       ; Store the processed value
+[  61]        :                                       
+[  62]        :                                       ; Convert to BCD
+[  63]    015A: B3 0A                                 mov bl,10            ; Divisor
+[  64]    015C: B4 00                                 mov ah,0             ; Clear AH
+[  65]    015E: F6 F3                                 div bl               ; AL = tens, AH = ones
+[  66]        :                                       
+[  67]        :                                       ; Store digits separately
+[  68]    0160: A2 32 10                              mov [1032h],al       ; Store tens digit
+[  69]    0163: 88 26 31 10                           mov [1031h],ah       ; Store ones digit
+[  70]        :                                       
+[  71]        :                                       ; Check temperature for LED control (57 degrees threshold)
+[  72]    0167: A0 00 20                              mov al,[2000h]       ; Get the processed value
+[  73]    016A: 3C 39                                 cmp al,57
+[  74]    016C: 73 02                                 jnc light_on         ; Jump if temperature >= 57
+[  75]    016E: EB 0C                                 jmp light_off        ; Otherwise, LED off
+[  76]        :                                       
+[  77]    0170:                                       light_on:
+[  78]    0170: C6 06 00 12 05                        mov [1200h],05h      ; First digit select
+[  79]    0175: C6 06 01 12 06                        mov [1201h],06h      ; Second digit select
+[  80]    017A: EB 0C                                 jmp display
+[  81]        :                                       
+[  82]    017C:                                       light_off:
+[  83]    017C: C6 06 00 12 01                        mov [1200h],01h      ; First digit select
+[  84]    0181: C6 06 01 12 02                        mov [1201h],02h      ; Second digit select
+[  85]    0186: EB 00                                 jmp display
+[  86]        :                                       
+[  87]    0188:                                       display:
+[  88]        :                                       ; Display tens digit
+[  89]    0188: A0 00 12                              mov al,[1200h]
+[  90]    018B: BA 04 00                              mov dx,PC            ; Select digit using PORTC
+[  91]    018E: EE                                    out dx,al
+[  92]        :                                       
+[  93]    018F: B7 10                                 mov bh,10h           ; Segment patterns base address
+[  94]    0191: 8A 1E 32 10                           mov bl,[1032h]       ; Get tens digit
+[  95]    0195: 8A 07                                 mov al,[bx]          ; Get pattern
+[  96]    0197: BA 00 00                              mov dx,PORTA
+[  97]    019A: EE                                    out dx,al
+[  98]    019B: E8 18 00                              call DELAY_S
+[  99]        :                                       
+[ 100]        :                                       ; Display ones digit
+[ 101]    019E: A0 01 12                              mov al,[1201h]
+[ 102]    01A1: BA 04 00                              mov dx,PC            ; Select digit using PORTC
+[ 103]    01A4: EE                                    out dx,al
+[ 104]        :                                       
+[ 105]    01A5: B7 10                                 mov bh,10h           ; Segment patterns base address
+[ 106]    01A7: 8A 1E 31 10                           mov bl,[1031h]       ; Get ones digit
+[ 107]    01AB: 8A 07                                 mov al,[bx]          ; Get pattern
+[ 108]    01AD: BA 00 00                              mov dx,PORTA
+[ 109]    01B0: EE                                    out dx,al
+[ 110]    01B1: E8 02 00                              call DELAY_S
+[ 111]        :                                       
+[ 112]    01B4: EB 87                                 jmp again
+[ 113]        :                                       
+[ 114]    01B6:                                       DELAY_S PROC NEAR
+[ 115]    01B6: 51                                    push cx              ; Save CX
+[ 116]    01B7: B9 FF 00                              mov cx,0FFh         ; Delay count
+[ 117]    01BA:                                       RPT2:
+[ 118]    01BA: E2 FE                                 loop RPT2
+[ 119]    01BC: 59                                    pop cx              ; Restore CX
+[ 120]    01BD: C3                                    ret
+[ 121]        :                                       DELAY_S ENDP
+[ 122]        :                                       
+[ 123]        :                                       mycode ends
+[ 124]        :                                       end Start
+[ 125]        :                                       
+[ 126]        :                                       ret
+[ 127]        :                                       
+[ 128]        :                                       
+[ 129]        :                                       
+[ 130]        :                                       
+[ 131]        :                                       
+[ 132]        :                                       
+ 
+===================================================================================================
+ 
+
+
+
+
+===================================================================================================

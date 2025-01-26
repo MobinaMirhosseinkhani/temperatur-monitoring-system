@@ -1,0 +1,19 @@
+< THE SYMBOL TABLE >  try10.bin  --  emu8086 assembler version: 4.08 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+MY_DATA                  	00010     	-5        	SEGMENT   	(ITSELF)  
+MYCODE                   	00010     	-5        	SEGMENT   	(ITSELF)  
+START                    	00005     	-1        	LABEL     	mycode    
+AGAIN                    	0003D     	-1        	LABEL     	mycode    
+ODD_NUMBER               	00051     	-1        	LABEL     	mycode    
+STORE_RESULT             	00057     	-1        	LABEL     	mycode    
+LIGHT_ON                 	00070     	-1        	LABEL     	mycode    
+LIGHT_OFF                	0007C     	-1        	LABEL     	mycode    
+DISPLAY                  	00088     	-1        	LABEL     	mycode    
+DELAY_S                  	000B6     	-1        	NEAR      	mycode    
+RPT2                     	000BA     	-1        	LABEL     	mycode    
+===================================================================================================
+[ 1/18/2025  --  2:56:50 AM ] 
+< END >
+ 
